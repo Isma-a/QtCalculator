@@ -1,0 +1,11 @@
+# Virtual environement
+venv/
+env/
+../QtCalculator2/.venv/
+
+# PyCharm config files
+.idea/
+
+# Python compiled files
+__pycache__/
+*.pyc
