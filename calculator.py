@@ -2,9 +2,11 @@ import sys
 
 from decimal import Decimal
 
+from components import AdaptiveLabel
+
 from PySide6.QtCore import Slot, Qt
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QPushButton, QLCDNumber, QLayoutItem, \
-    QSizePolicy, QLabel
+    QSizePolicy
 
 
 class Calculator(QMainWindow):
@@ -21,6 +23,7 @@ class Calculator(QMainWindow):
         self.lastValue = "0" # Memorize the first value of an operation
         self.memory = 0 # Memory for M button
         self.resetValue = False # Flag for reset the value after the final result apparition
+        self.statusLabel = "Calculator" # Text of the QLabel on the calculator
 
         self.createWidget()
         self.createLayout()
@@ -60,9 +63,7 @@ class Calculator(QMainWindow):
         self.buttonDivisionInt = QPushButton("÷R")
         self.buttonSquareRoot = QPushButton("√")
 
-        self.calculatorLabel = QLabel("Calculator")
-        self.calculatorLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.calculatorLabel.setScaledContents(True)
+        self.calculatorLabel = AdaptiveLabel(self.statusLabel)
 
     def createLayout(self)->None:
 
@@ -107,15 +108,21 @@ class Calculator(QMainWindow):
 
         for idx in range(self.grid.count()):
             item: QLayoutItem | None = self.grid.itemAt(idx)
-            widget = item.widget()
+            widget: QWidget | None = item.widget()
             widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
             if isinstance(widget, QPushButton):
                 widget.setStyleSheet("background: #595959; color: white; font-weight: bold; font-size: 20px")
-            elif isinstance(widget, QLabel):
+
+            elif isinstance(widget, AdaptiveLabel):
                 widget.setStyleSheet("background: #36363A; font-weight: bold")
+
             else:
                 widget.setStyleSheet("background: #a2af77; font-weight: bold")
 
+        self.calculatorLabel.setWordWrap(True)
+        self.calculatorLabel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.calculatorLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.buttonEqual.setStyleSheet("background: #f05a2D; font-weight: bold; font-size: 20px; color: white;")
         self.buttonC.setStyleSheet("background: #F9C210; color: white; font-weight: bold; font-size: 20px")
 
@@ -204,6 +211,8 @@ class Calculator(QMainWindow):
 
         if (self.calculType == "÷" or self.calculType == '÷R') and Decimal(self.value) == Decimal(0): # Check if there is division by zero
                 self.value = 'ERROR'
+                self.statusLabel = "Can't divide by zero"
+                self.labelUpdate()
         else: # Make the correct operation and remove useless zero from the value (Decimal can take str value)
             value = Decimal(0)
             if self.calculType == "+": # addition
@@ -242,6 +251,8 @@ class Calculator(QMainWindow):
             self.result()
         if Decimal(self.value) < Decimal(0): # Reject negative value
             self.value = 'ERROR'
+            self.statusLabel = "Cannot take square root of negative number"
+            self.labelUpdate()
         else:
             self.value = f"{(Decimal(self.value) ** Decimal(1/2)).normalize():f}" # Find the square root, remove useless zero and convert back the value to str
 
@@ -262,6 +273,8 @@ class Calculator(QMainWindow):
     def clearEntry(self)->None:
 
         self.value = "0" # Reset the current value
+        self.statusLabel = "Calculator"
+        self.labelUpdate() # Update the QLabel
         self.screenUpdate()  # Update the screen
 
     @Slot()
@@ -270,6 +283,8 @@ class Calculator(QMainWindow):
         self.value = "0"  # Reset the current value
         self.lastValue = "0" # Reset the last value saved
         self.calculType = "None" # Reset the calcul type
+        self.statusLabel = "Calculator"
+        self.labelUpdate()  # Update the QLabel
         self.screenUpdate()  # Update the screen
 
     @Slot()
@@ -296,6 +311,10 @@ class Calculator(QMainWindow):
     def memoryReset(self)->None:
 
         self.memory = 0
+
+    def labelUpdate(self)->None:
+
+        self.calculatorLabel.setText(self.statusLabel)
 
 
 if __name__ == "__main__":
