@@ -1,0 +1,112 @@
+name: Build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+          - os: ubuntu-22.04
+            name: Linux
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install UPX (Windows)
+        if: runner.os == 'Windows'
+        run: choco install upx
+
+      - name: Install UPX (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y upx-ucl
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: >
+          pyinstaller --noconfirm --windowed --name "Calculator" --icon=icon.ico
+          --exclude-module PySide6.QtWebEngine
+          --exclude-module PySide6.QtWebEngineCore
+          --exclude-module PySide6.QtWebEngineWidgets
+          --exclude-module PySide6.QtNetwork
+          --exclude-module PySide6.QtQml
+          --exclude-module PySide6.QtQuick
+          --exclude-module PySide6.QtSql
+          --exclude-module PySide6.QtTest
+          --exclude-module PySide6.QtXml
+          --exclude-module PySide6.QtBluetooth
+          calculator.py
+
+      - name: Create ZIP Artifact (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path dist\Calculator -DestinationPath Calculator-Windows.zip
+
+      - name: Create ZIP Artifact (Linux)
+        if: runner.os == 'Linux'
+        run: cd dist && zip -r ../Calculator-Linux.zip Calculator
+
+      - name: Create AppImage Artifact (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # Create AppDir structure
+          mkdir -p Calculator.AppDir/usr/bin
+          cp -r dist/Calculator/* Calculator.AppDir/usr/bin/
+          
+          # Create the launch script
+          cat << 'EOF' > Calculator.AppDir/AppRun
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export LD_LIBRARY_PATH="${HERE}/usr/bin:$LD_LIBRARY_PATH"
+          exec "${HERE}/usr/bin/Calculator" "$@"
+          EOF
+          chmod +x Calculator.AppDir/AppRun
+          
+          # Create the .desktop file
+          cat << 'EOF' > Calculator.AppDir/Calculator.desktop
+          [Desktop Entry]
+          Name=Calculator
+          Exec=Calculator
+          Icon=calculator
+          Type=Application
+          Categories=Utility;Calculator;
+          EOF
+          
+          # Copy the PNG icon
+          cp icon.png Calculator.AppDir/calculator.png
+          
+          # 5. Download appimagetool and generate the .AppImage file
+          wget -O appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+          ./appimagetool --appimage-extract-and-run Calculator.AppDir Calculator-Linux.AppImage
+
+      - name: Upload Artifacts to Actions (Manual Tests)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Calculator-${{ matrix.name }}-Artifacts
+          path: Calculator-*.*
+          retention-days: 5
+
+      - name: Upload Artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Calculator-*.*
