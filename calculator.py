@@ -20,6 +20,7 @@ class Calculator(QMainWindow):
         self.calculType = "None" # Type of calcul chose to make the operation
         self.lastValue = "0" # Memorize the first value of an operation
         self.memory = 0 # Memory for M button
+        self.resetValue = False # Flag for reset the value after the final result apparition
 
         self.createWidget()
         self.createLayout()
@@ -115,7 +116,8 @@ class Calculator(QMainWindow):
             else:
                 widget.setStyleSheet("background: #a2af77; font-weight: bold")
 
-        self.buttonEqual.setStyleSheet("background: #f05a2D; font-weight: bold; font-size: 20px; color: white;")    
+        self.buttonEqual.setStyleSheet("background: #f05a2D; font-weight: bold; font-size: 20px; color: white;")
+        self.buttonC.setStyleSheet("background: #F9C210; color: white; font-weight: bold; font-size: 20px")
 
     def createSignals(self)->None:
 
@@ -154,8 +156,9 @@ class Calculator(QMainWindow):
     @Slot()
     def numberButtonClicked(self)->None:
 
-        if self.value == "0" or self.value == 'ERROR':
+        if self.value == "0" or self.value == 'ERROR' or (self.resetValue == True and self.calculType == 'None'):
             self.value = self.sender().text()
+            self.resetValue = False
         else:
             self.value = self.value + self.sender().text()
         self.screenUpdate()
@@ -166,8 +169,9 @@ class Calculator(QMainWindow):
 
         value = self.value
 
-        if value == 'ERROR': # Check if the previous operation was an error
+        if value == 'ERROR' or (self.resetValue == True and self.calculType == 'None'): # Check if the previous operation was an error or if we need to reset it
             self.value = '0.'
+            self.resetValue = False
 
         if '.' not in value:
             self.value = value + '.'
@@ -225,6 +229,7 @@ class Calculator(QMainWindow):
 
             self.value = f"{value:f}" # Convert back the value to str
 
+        self.resetValue = True
         self.lastValue = '0' # The last value is reinitialized to zero
         self.calculType = 'None' # Reinitialized calcul type after the operation
         self.screenUpdate() # Update the screen
