@@ -5,7 +5,7 @@
 ![Build](https://img.shields.io/github/actions/workflow/status/Isma-a/QtCalculator/build.yml?label=Build)
 
 **Qt Calculator** is a modern and multiplatform calculator app.
-Developed in Python with the framework PySide6 (Qt), it gives a seamless user interface and a robust handling of mathematical errors.
+Developed in Python with the framework PySide6 (Qt6), it gives a seamless user interface and a robust handling of mathematical errors.
 
 <br>
 <img src="assets/presentation_video.gif" alt="Calculator Overview" width="400">
