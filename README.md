@@ -1,7 +1,7 @@
 # QtCalculator
 
 ![Python](https://img.shields.io/badge/Python-3.14-blue?style=flat&logo=python)
-![PySide6](https://img.shields.io/badge/PySide6-Qt-green?style=flat&logo=qt)
+![PySide6](https://img.shields.io/badge/PySide6-Qt6-green?style=flat&logo=qt)
 ![Build](https://img.shields.io/github/actions/workflow/status/Isma-a/QtCalculator/build.yml?label=Build)
 
 **Qt Calculator** is a modern and multiplatform calculator app.
@@ -26,7 +26,7 @@ Developed in Python with the framework PySide6 (Qt), it gives a seamless user in
 
 ## Technical Info
 
-* **Language:** Python 3
+* **Language:** Python 3.14+
 * **Graphical User Interface:** PySide6 (Qt for Python)
 * **Build & Packaging:** PyInstaller
 * **CI/CD:** GitHub Actions
