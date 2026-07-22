@@ -19,7 +19,7 @@ class Calculator(QMainWindow):
         self.setStyleSheet("background: #36363A")
 
         self.value = "0" # Base value of the screen
-        self.calculType = "None" # Type of calcul chose to make the operation
+        self.currentOperation = "None" # Type of calcul chose to make the operation
         self.lastValue = "0" # Memorize the first value of an operation
         self.memory = 0 # Memory for M button
         self.resetValue = False # Flag for reset the value after the final result apparition
@@ -141,12 +141,12 @@ class Calculator(QMainWindow):
 
         self.buttonPoint.clicked.connect(self.pointButtonClicked)
 
-        self.buttonPlus.clicked.connect(self.setNewCalculType)
-        self.buttonMinus.clicked.connect(self.setNewCalculType)
-        self.buttonDivision.clicked.connect(self.setNewCalculType)
-        self.buttonMultiplication.clicked.connect(self.setNewCalculType)
-        self.buttonDivisionInt.clicked.connect(self.setNewCalculType)
-        self.buttonModulo.clicked.connect(self.setNewCalculType)
+        self.buttonPlus.clicked.connect(self.setNewcurrentOperation)
+        self.buttonMinus.clicked.connect(self.setNewcurrentOperation)
+        self.buttonDivision.clicked.connect(self.setNewcurrentOperation)
+        self.buttonMultiplication.clicked.connect(self.setNewcurrentOperation)
+        self.buttonDivisionInt.clicked.connect(self.setNewcurrentOperation)
+        self.buttonModulo.clicked.connect(self.setNewcurrentOperation)
 
         self.buttonPlusOrMinus.clicked.connect(self.changeValueSign)
         self.buttonSquareRoot.clicked.connect(self.squareRoot)
@@ -163,7 +163,7 @@ class Calculator(QMainWindow):
     @Slot()
     def numberButtonClicked(self)->None:
 
-        if self.value == "0" or self.value == 'ERROR' or (self.resetValue == True and self.calculType == 'None'):
+        if self.value == "0" or self.value == 'ERROR' or (self.resetValue == True and self.currentOperation == 'None'):
             self.value = self.sender().text()
             self.resetValue = False
         else:
@@ -176,7 +176,7 @@ class Calculator(QMainWindow):
 
         value = self.value
 
-        if value == 'ERROR' or (self.resetValue == True and self.calculType == 'None'): # Check if the previous operation was an error or if we need to reset it
+        if value == 'ERROR' or (self.resetValue == True and self.currentOperation == 'None'): # Check if the previous operation was an error or if we need to reset it
             self.value = '0.'
             self.resetValue = False
 
@@ -197,40 +197,40 @@ class Calculator(QMainWindow):
         self.screen.display(screenValue) # Display the value
 
     @Slot()
-    def setNewCalculType(self)->None:
+    def setNewcurrentOperation(self)->None:
 
-        if self.calculType != "None" and self.value != '0': # Look if there is already a calcul in process, and give the possibility to change operating mode if we haven't typed any numbers after it
+        if self.currentOperation != "None" and self.value != '0': # Look if there is already a calcul in process, and give the possibility to change operating mode if we haven't typed any numbers after it
             self.result()
 
-        self.calculType = self.sender().text() # Update the type of calcul we make
+        self.currentOperation = self.sender().text() # Update the type of calcul we make
         self.lastValue = self.value # Save the first value for the calcul
         self.value = "0" # The value is reinitialized to zero
 
     @Slot()
     def result(self)->None:
 
-        if (self.calculType == "÷" or self.calculType == '÷R') and Decimal(self.value) == Decimal(0): # Check if there is division by zero
+        if (self.currentOperation == "÷" or self.currentOperation == '÷R') and Decimal(self.value) == Decimal(0): # Check if there is division by zero
                 self.value = 'ERROR'
                 self.statusLabel = "Can't divide by zero"
                 self.labelUpdate()
         else: # Make the correct operation and remove useless zero from the value (Decimal can take str value)
             value = Decimal(0)
-            if self.calculType == "+": # addition
+            if self.currentOperation == "+": # addition
                 value = (Decimal(self.value) + Decimal(self.lastValue)).normalize()
 
-            elif self.calculType == "-": # subtraction
+            elif self.currentOperation == "-": # subtraction
                 value = (Decimal(self.lastValue) - Decimal(self.value)).normalize()
 
-            elif self.calculType == "x": # multiplication
+            elif self.currentOperation == "x": # multiplication
                 value = (Decimal(self.value) * Decimal(self.lastValue)).normalize()
 
-            elif self.calculType == "%": # modulo
+            elif self.currentOperation == "%": # modulo
                 value = (Decimal(self.lastValue) % Decimal(self.value)).normalize()
 
-            elif self.calculType == "÷" and self.value != '0':  # division
+            elif self.currentOperation == "÷" and self.value != '0':  # division
                 value = (Decimal(self.lastValue) / Decimal(self.value)).normalize()
 
-            elif self.calculType == "÷R" and self.value != '0':  # Euclidean division
+            elif self.currentOperation == "÷R" and self.value != '0':  # Euclidean division
                 value = (Decimal(self.lastValue) // Decimal(self.value)).normalize()
 
             else: # Same value, nothing change
@@ -240,7 +240,7 @@ class Calculator(QMainWindow):
 
         self.resetValue = True
         self.lastValue = '0' # The last value is reinitialized to zero
-        self.calculType = 'None' # Reinitialized calcul type after the operation
+        self.currentOperation = 'None' # Reinitialized calcul type after the operation
         self.screenUpdate() # Update the screen
 
 
@@ -256,7 +256,7 @@ class Calculator(QMainWindow):
         else:
             self.value = f"{(Decimal(self.value) ** Decimal(1/2)).normalize():f}" # Find the square root, remove useless zero and convert back the value to str
 
-        self.calculType = 'None' # Reinitialized calcul type after the operation
+        self.currentOperation = 'None' # Reinitialized calcul type after the operation
         self.screenUpdate()
 
     @Slot()
@@ -282,7 +282,7 @@ class Calculator(QMainWindow):
 
         self.value = "0"  # Reset the current value
         self.lastValue = "0" # Reset the last value saved
-        self.calculType = "None" # Reset the calcul type
+        self.currentOperation = "None" # Reset the calcul type
         self.statusLabel = "Calculator"
         self.labelUpdate()  # Update the QLabel
         self.screenUpdate()  # Update the screen
@@ -290,14 +290,14 @@ class Calculator(QMainWindow):
     @Slot()
     def memoryAdd(self)->None:
 
-        if self.calculType != 'None':
+        if self.currentOperation != 'None':
             self.result()
         self.memory = (Decimal(self.memory) + Decimal(self.value)).normalize()
 
     @Slot()
     def memorySubtract(self)->None:
 
-        if self.calculType != 'None':
+        if self.currentOperation != 'None':
             self.result()
         self.memory = (Decimal(self.memory) - Decimal(self.value)).normalize()
 
