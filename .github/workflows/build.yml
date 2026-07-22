@@ -16,13 +16,13 @@ jobs:
         include:
           - os: windows-latest
             name: Windows
-            icon_file: icon.ico
+            icon_file: assets/icon.ico
           - os: ubuntu-22.04
             name: Linux
-            icon_file: icon.png
+            icon_file: assets/icon.png
           - os: macos-latest
             name: macOS
-            icon_file: icon.icns
+            icon_file: assets/icon.icns
 
     steps:
       - name: Checkout Code
